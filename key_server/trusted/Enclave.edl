@@ -1,0 +1,21 @@
+enclave {
+  include "stdint.h"
+	include "wolfssl/ssl.h"
+
+  from "attester.edl" import *;
+  from "tchallenger.edl" import *;
+  from "ratls_wolfssl.edl" import *;
+  from "server.edl" import *;
+
+  trusted {
+    public sgx_status_t enc_client_service([user_check] WOLFSSL* ssl, [user_check] void* store_ptr);
+    public sgx_status_t enc_worker_service([user_check] WOLFSSL* ssl, [user_check] void* store_ptr);
+  };
+
+  untrusted {
+    void ocall_save_kv([in, size=key_len] const void* key_buf, size_t key_len, [in, size=value_len] const void* value_buf, size_t value_len, [user_check] void* store_ptr);
+    void ocall_get_kv([in, size=key_len] const void* key_buf, size_t key_len, [out, size=value_buf_len] void* value_buf, size_t value_buf_len, [out] size_t* value_len, [user_check] void* store_ptr);
+    void ocall_debug_print([in, size=len] const void* s, size_t len);
+    void ocall_debug_print_string([in, string] const char* str);
+  };
+};

@@ -1,0 +1,6 @@
+enclave {
+  untrusted {
+        void ocall_print_time();
+        void ocall_printf([in, string] const char *str);
+  };
+};

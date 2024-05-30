@@ -1,0 +1,6 @@
+#ifndef SECURE_SERVERLESS_COMMON_IOPATCHT_H_
+#define SECURE_SERVERLESS_COMMON_IOPATCHT_H_
+
+int printf(const char* fmt, ...);
+
+#endif  // SECURE_SERVERLESS_COMMON_IOPATCHT_H_

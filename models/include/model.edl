@@ -1,0 +1,9 @@
+enclave {
+  untrusted {
+    void ocall_load_content([in, size=len] const char* key, size_t len,
+      [out] char** value, [out] size_t* vlen,
+      [user_check] void* store);
+    void ocall_free_loaded([in, size=len] const char* key, size_t len,
+      [user_check] void* store);
+  };
+};

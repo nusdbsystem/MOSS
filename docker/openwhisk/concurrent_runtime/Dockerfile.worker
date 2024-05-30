@@ -1,0 +1,47 @@
+FROM builderbase as crtwbuilder
+
+USER root
+
+COPY --from=builderbase /secure-serverless-inference/deps /secure-serverless-inference/deps
+COPY ./common/ /secure-serverless-inference/common
+COPY ./concurrent_runtime/ /secure-serverless-inference/concurrent_runtime
+COPY ./message/ /secure-serverless-inference/message
+COPY ./models/ /secure-serverless-inference/models
+COPY ./store/ /secure-serverless-inference/store
+COPY ./worker/ /secure-serverless-inference/worker
+COPY ./config.h /secure-serverless-inference/config.h
+
+COPY ./examples/ /examples
+
+ENV USE_WORKER_SERVICE 1
+
+ENV SGX_SDK=/opt/intel/sgxsdk
+
+ARG INFERENCERT
+ARG TVM_MODULE_PATH
+
+RUN [ ${INFERENCERT} = "TFLM_DEFAULT" ] && echo "use tflm rt" \
+  || ([ ${INFERENCERT} = "TVMCRT_DEFAULT" ] && ([ -n "${TVM_MODULE_PATH}" ] \
+  && echo "use tvm c rt"))
+
+ENV INFERENCERT ${INFERENCERT}
+ENV TVM_MODULE_PATH ${TVM_MODULE_PATH}
+
+RUN cd /secure-serverless-inference/ \
+  && cd models && make mrproper && make all && make install && cd .. \
+  && cd worker && make mrproper && make all && make install && cd ..\
+  && cd concurrent_runtime && make mrproper && make openwhisk_runtime && make  install_openwhisk_runtime && cd ..
+
+# image
+FROM sgx_dcap:v1
+
+USER root
+
+# default libuv thread pool size to 8.
+ARG UV_THREADPOOL_SIZE=8
+RUN echo UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
+ENV UV_THREADPOOL_SIZE ${UV_THREADPOOL_SIZE}
+
+COPY --from=crtwbuilder /secure-serverless-inference/concurrent_runtime/install /install
+
+CMD SGX_AESM_ADDR=1 /install/bin/server /install/lib/Worker_Enclave.signed.so /mounted_store /tmp

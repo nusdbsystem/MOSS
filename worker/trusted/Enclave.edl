@@ -1,0 +1,33 @@
+enclave {
+  include "stdint.h"
+
+  from "sgx_tstdc.edl" import *; // needed for mutex and lock_guard use
+
+  from "attester.edl" import *;
+  from "tchallenger.edl" import *;
+  from "ratls_wolfssl.edl" import *;
+  from "message/channel_client.edl" import *;
+
+  from "InferenceRT_Enclave.edl" import *;
+
+  trusted {
+    public sgx_status_t enc_model_inference(
+      [in, size=user_id_size] const char* user_id, size_t user_id_size,
+      [in, size=input_data_size] const char* input_data, size_t input_data_size,
+      [in, size=model_id_size] const char* model_id, size_t model_id_size,
+      [user_check] void* store, [in, size=addr_len] const char* ks_addr, size_t addr_len, uint16_t ks_port, [out] size_t* output_size);
+    public sgx_status_t enc_get_encrypted_prediction(
+      [out, size=prediction_size] uint8_t* prediction,
+      size_t prediction_size);
+    public void enc_clear_exec_context();
+  };
+
+  untrusted {
+#ifndef NDEBUG
+    void ocall_debug_print([in, size=len] const void* s, size_t len);
+    void ocall_debug_print_string([in, string] const char* str);
+    void ocall_debug_print_hex([in, size=len] const void* str, size_t len);
+    void ocall_debug_print_hexstring([in, string] const char* str);
+#endif // NDEBUG
+  };
+};

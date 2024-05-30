@@ -1,0 +1,10 @@
+**/.git
+
+**/*.o
+**/*.so
+**/*.a
+
+examples
+licenses
+
+!examples/tvm-mb/mobilenet1.0
